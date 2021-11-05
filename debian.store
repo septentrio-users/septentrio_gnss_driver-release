@@ -1,1 +1,1 @@
-{"trim": "", "base": "12eeafa", "trimbase": "", "parent": "debian/noetic/septentrio_gnss_driver", "previous": "9b0cd5b"}
+{"base": "e98c1d6", "parent": "debian/noetic/septentrio_gnss_driver", "previous": "147a12b", "trim": "", "trimbase": ""}
