@@ -2,8 +2,27 @@
 Changelog for package septentrio_gnss_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated Changelog
+* Merge pull request #40 from thomasemter/dev
+  Fixes for velcovgeodetic publishing and setting of antenna type
+* Fix gpsfix and velcovgeodetic interconnections
+* Fix missing quotes for antenna type
+* Increased buffer size from 8192 to 16384 bytes
+* Contributors: Thomas Emter, Tibor Dome, tibordome
+
+1.0.8 (2021-10-23)
+------------------
+* Added INS Support
+
+1.0.7 (2021-05-18)
+------------------
+* Clang formatting, publishing from SBF log, play-back of PCAP files
+
 1.0.6 (2020-10-16)
 ------------------
+* ROSaic binary installation now available on Melodic & Noetic
 
 1.0.5 (2020-10-15)
 ------------------
