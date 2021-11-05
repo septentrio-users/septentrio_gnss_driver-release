@@ -24,6 +24,13 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system thread regex)
 
+## For PCAP file handling
+find_library(libpcap_LIBRARIES pcap)
+if ("${libpcap_LIBRARIES}" STREQUAL "pcap-NOTFOUND")
+    set(libpcap_FOUND FALSE)
+else ()
+    set(libpcap_FOUND TRUE)
+endif ()
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -62,6 +69,7 @@ add_message_files(
    PVTGeodetic.msg
    PosCovCartesian.msg
    PosCovGeodetic.msg
+   VelCovGeodetic.msg
    AttEuler.msg
    AttCovEuler.msg
    Gpgga.msg
@@ -69,6 +77,13 @@ add_message_files(
    Gpgsa.msg
    Gpgsv.msg
    GpgsvSatellite.msg
+   INSNavCart.msg
+   INSNavGeod.msg
+   IMUSetup.msg
+   VelSensorSetup.msg
+   ExtEventINSNavGeod.msg
+   ExtEventINSNavCart.msg
+   ExtSensorMeas.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -150,7 +165,21 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/septentrio_gnss_driver/node/rosaic_node.cpp src/septentrio_gnss_driver/communication/circular_buffer.cpp src/septentrio_gnss_driver/parsers/parsing_utilities.cpp src/septentrio_gnss_driver/parsers/string_utilities.cpp src/septentrio_gnss_driver/parsers/nmea_parsers/gpgga.cpp src/septentrio_gnss_driver/parsers/nmea_parsers/gprmc.cpp src/septentrio_gnss_driver/parsers/nmea_parsers/gpgsa.cpp src/septentrio_gnss_driver/parsers/nmea_parsers/gpgsv.cpp src/septentrio_gnss_driver/crc/crc.c src/septentrio_gnss_driver/communication/communication_core.cpp src/septentrio_gnss_driver/communication/rx_message.cpp src/septentrio_gnss_driver/communication/callback_handlers.cpp)
+add_executable(${PROJECT_NAME}_node 
+    src/septentrio_gnss_driver/node/rosaic_node.cpp 
+    src/septentrio_gnss_driver/communication/circular_buffer.cpp 
+    src/septentrio_gnss_driver/parsers/parsing_utilities.cpp 
+    src/septentrio_gnss_driver/parsers/string_utilities.cpp 
+    src/septentrio_gnss_driver/parsers/nmea_parsers/gpgga.cpp 
+    src/septentrio_gnss_driver/parsers/nmea_parsers/gprmc.cpp 
+    src/septentrio_gnss_driver/parsers/nmea_parsers/gpgsa.cpp 
+    src/septentrio_gnss_driver/parsers/nmea_parsers/gpgsv.cpp 
+    src/septentrio_gnss_driver/crc/crc.c 
+    src/septentrio_gnss_driver/communication/communication_core.cpp 
+    src/septentrio_gnss_driver/communication/rx_message.cpp 
+    src/septentrio_gnss_driver/communication/callback_handlers.cpp
+    src/septentrio_gnss_driver/communication/pcap_reader.cpp
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -164,7 +193,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node 
-   ${catkin_LIBRARIES} ${Boost_LIBRARIES}
+   ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${libpcap_LIBRARIES}
 )
 
 #############
@@ -174,48 +203,18 @@ target_link_libraries(${PROJECT_NAME}_node
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
-## Mark executable scripts (Python etc.) for installation
-## in contrast to setup.py, you can choose the destination
-# catkin_install_python(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
 install(TARGETS ${PROJECT_NAME}_node
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-## Mark libraries for installation
-## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-#install(TARGETS septentrio-gnss-driver
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-#)
-
 ## Mark cpp header files for installation
-#install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#)
+install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
 
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
-
-#############
-## Testing ##
-#############
-
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_septentrio_gnss_driver.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+## Mark other files or directories for installation (e.g. launch and bag files, etc.)
+install(DIRECTORY config launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
