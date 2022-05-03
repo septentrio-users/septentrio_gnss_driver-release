@@ -22,7 +22,7 @@ tracks:
     release_inc: '7'
     release_repo_url: null
     release_tag: v:{version}
-    ros_distro: noetic
+    ros_distro: melodic
     vcs_type: git
     vcs_uri: https://github.com/septentrio-gnss/septentrio_gnss_driver.git
     version: 1.1.0
