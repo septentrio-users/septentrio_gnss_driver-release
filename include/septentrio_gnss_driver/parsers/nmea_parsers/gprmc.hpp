@@ -64,6 +64,10 @@
 #include <septentrio_gnss_driver/parsers/string_utilities.h>
 // Boost and ROS includes
 #include <boost/make_shared.hpp>
+#include <septentrio_gnss_driver/Gprmc.h>
+
+extern std::string g_frame_id;
+extern bool g_use_gnss_time;
 
 /**
  * @file gprmc.hpp
@@ -76,14 +80,14 @@
  * @brief Derived class for parsing RMC messages
  * @date 28/09/20
  */
-class GprmcParser : public BaseParser<GprmcMsg>
+class GprmcParser : public BaseParser<septentrio_gnss_driver::GprmcPtr>
 {
 public:
     /**
      * @brief Constructor of the class GprmcParser
      */
     GprmcParser() :
-        BaseParser<GprmcMsg>(), was_last_gprmc_valid_(false)
+        BaseParser<septentrio_gnss_driver::GprmcPtr>(), was_last_gprmc_valid_(false)
     {
     }
 
@@ -96,10 +100,10 @@ public:
     /**
      * @brief Parses one RMC message
      * @param[in] sentence The RMC message to be parsed
-     * @return A ROS message pointer of ROS type GprmcMsg
+     * @return A ROS message pointer of ROS type septentrio_gnss_driver::GprmcPtr
      */
-    GprmcMsg
-    parseASCII(const NMEASentence& sentence, const std::string& frame_id, bool use_gnss_time, Timestamp time_obj) noexcept(false) override;
+    septentrio_gnss_driver::GprmcPtr
+    parseASCII(const NMEASentence& sentence) noexcept(false) override;
 
     /**
      * @brief Tells us whether the last RMC message was valid/usable or not
