@@ -1,3 +1,26 @@
+## septentrio_gnss_driver (noetic) - 1.3.0-1
+
+The packages in the `septentrio_gnss_driver` repository were released into the `noetic` distro by running `/home/tibor/anaconda3/envs/shape_al/bin/bloom-release septentrio_gnss_driver --track noetic_dev --rosdistro noetic` on `Thu, 15 Jun 2023 11:39:56 -0000`
+
+The `septentrio_gnss_driver` package was released.
+
+Version of package(s) in repository `septentrio_gnss_driver`:
+
+- upstream repository: https://github.com/septentrio-gnss/septentrio_gnss_driver.git
+- release repository: https://github.com/septentrio-users/septentrio_gnss_driver-release.git
+- rosdistro version: `1.2.3-1`
+- old version: `null`
+- new version: `1.3.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.11.2`
+- catkin_pkg version: `0.5.2`
+- rosdep version: `0.22.2`
+- rosdistro version: `0.9.0`
+- vcstools version: `0.1.42`
+
+
 ## septentrio_gnss_driver (melodic) - 1.3.0-1
 
 The packages in the `septentrio_gnss_driver` repository were released into the `melodic` distro by running `/home/tibor/anaconda3/envs/shape_al/bin/bloom-release septentrio_gnss_driver --track melodic_dev --rosdistro melodic` on `Thu, 15 Jun 2023 11:33:18 -0000`
