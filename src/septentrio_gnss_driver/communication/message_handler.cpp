@@ -661,7 +661,6 @@ namespace io {
         if (!settings_->publish_twist)
             return;
         TwistWithCovarianceStampedMsg msg;
-        msg.header.frame_id = "navigation";
 
         if (fromIns)
         {
@@ -953,7 +952,7 @@ namespace io {
         msg.header.frame_id = "utm_" + zonestring;
         msg.header.stamp = last_insnavgeod_.header.stamp;
         if (settings_->ins_use_poi)
-            msg.child_frame_id = settings_->poi_frame_id; // TODO param
+            msg.child_frame_id = settings_->poi_frame_id;
         else
             msg.child_frame_id = settings_->frame_id;
 
@@ -1103,7 +1102,7 @@ namespace io {
         msg.header.frame_id = "ecef";
         msg.header.stamp = last_insnavcart_.header.stamp;
         if (settings_->ins_use_poi)
-            msg.child_frame_id = settings_->poi_frame_id; // TODO param
+            msg.child_frame_id = settings_->poi_frame_id;
         else
             msg.child_frame_id = settings_->frame_id;
 
@@ -1392,6 +1391,8 @@ namespace io {
                  last_poscovgeodetic_.block_header.tow))
                 return;
 
+            msg.header = last_pvtgeodetic_.header;
+
             uint16_t type_of_pvt = ((uint16_t)(last_pvtgeodetic_.mode)) & mask;
             switch (type_of_pvt)
             {
@@ -1475,7 +1476,8 @@ namespace io {
             }
             last_ins_tow = last_insnavgeod_.block_header.tow;
 
-            NavSatFixMsg msg;
+            msg.header = last_insnavgeod_.header;
+
             uint16_t type_of_pvt = ((uint16_t)(last_insnavgeod_.gnss_mode)) & mask;
             switch (type_of_pvt)
             {
@@ -1733,6 +1735,7 @@ namespace io {
 
         if (settings_->septentrio_receiver_type == "gnss")
         {
+            msg.header = last_pvtgeodetic_.header;
 
             // PVT Status Analysis
             uint16_t status_mask =
@@ -1890,6 +1893,8 @@ namespace io {
             msg.position_covariance_type = NavSatFixMsg::COVARIANCE_TYPE_KNOWN;
         } else if (settings_->septentrio_receiver_type == "ins")
         {
+            msg.header = last_insnavgeod_.header;
+
             // PVT Status Analysis
             uint16_t status_mask =
                 15; // We extract the first four bits using this mask.
@@ -2646,7 +2651,7 @@ namespace io {
 
             static const int32_t ins_major = 1;
             static const int32_t ins_minor = 4;
-            static const int32_t ins_patch = 1;
+            static const int32_t ins_patch = 0;
             static const int32_t gnss_major = 4;
             static const int32_t gnss_minor = 12;
             static const int32_t gnss_patch = 1;

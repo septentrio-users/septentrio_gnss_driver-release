@@ -2,14 +2,14 @@
 Changelog for package septentrio_gnss_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.3.0 (2022-06-15)
+1.3.1 (2023-07-06)
 ------------------
 * New Features
    * Recovery from connection interruption
    * Add option to bypass configuration of Rx
    * OSNMA
    * Latency compensation for ROS timestamps
-   * Output of SBf block VelCovCartesian
+   * Output of SBF block VelCovCartesian
    * Support for UDP and TCP via IP server
    * New VSM handling allows for unknown variances (INS firmware >= 1.4.1)
    * Add heading angle to GPSFix msg (by diverting dip field, cf. readme)
@@ -20,6 +20,10 @@ Changelog for package septentrio_gnss_driver
      * Prevent message loss in file reading
    * Add some explanatory warnings for parameter mismatches
    * Add units to message definitions
+* Fixes
+   * navsatfix for INS
+   * Empty headers
+   * Single antenna receiver setup
 * Preliminary Features
    * Output of localization and tf in ECEF frame, testing and feedback welcome
 
