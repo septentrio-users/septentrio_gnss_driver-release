@@ -3,7 +3,7 @@
 <img src="ROSaicLogo.png" width="60%">
 
 ## Overview
-This repository hosts drivers for ROS (Melodic and Noetic) and ROS 2 (Foxy, Galactic, Humble, Rolling, and beyond) - written in C++ - that work with mosaic and AsteRx - two of Septentrio's cutting-edge GNSS/INS receiver families - and beyond. The ROs version is available in this branch, whereas the ROS2 version is available in the branch `ros2`.
+This repository hosts drivers for ROS (Melodic and Noetic) and ROS 2 (Foxy, Galactic, Humble, Rolling, and beyond) - written in C++ - that work with [mosaic](https://web.septentrio.com/GH-SSN-modules) and [AsteRx](https://web.septentrio.com/INS-SSN-Rx) - two of Septentrio's cutting-edge GNSS and GNSS/INS [receiver families](https://web.septentrio.com/GH-SSN-RX) - and beyond. The ROs version is available in this branch, whereas the ROS2 version is available in the branch `ros2`.
 
 Main Features:
 - Supports Septentrio's single antenna GNSS, dual antenna GNSS and INS receivers
@@ -78,7 +78,7 @@ Conversions from LLA to UTM are incorporated through [GeographicLib](https://geo
     * INS with firmware 1.2.0 does not support velocity aiding.
     * INS with firmware 1.2.0 does not support setting of initial heading.
   + Known issues:
-    * UDP over USB: Blocks are sent twice on GNSS with firmware <= 4.12.1 and INS with firmware <= 1.4.1. For GNSS it will be fixed in the soon-to-be-released 4.14 (expected in July 2023), for INS it will be fixed in 1.4.1 (expected in November 2023).
+    * UDP over USB: Blocks are sent twice on GNSS with firmware <= 4.12.1 and INS with firmware <= 1.4. For GNSS it is fixed in version 4.14 (released on June 15th 2023), for INS it will be fixed in to-be-released 1.4.1 (expected in November 2023).
   + If `use_ros_axis_orientation` to `true` axis orientations are converted by the driver between NED (Septentrio: yaw = 0 is north, positive clockwise) and ENU (ROS: yaw = 0 is east, positive counterclockwise). There is no conversion when setting this parameter to `false` and the angles will be consistent with the web GUI.
   :<br>
   ```
