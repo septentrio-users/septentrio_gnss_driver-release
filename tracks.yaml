@@ -187,7 +187,7 @@ tracks:
     ros_distro: noetic
     vcs_type: git
     vcs_uri: https://github.com/septentrio-gnss/septentrio_gnss_driver.git
-    version: :{auto}
+    version: 1.3.2
   noetic_dev:
     actions:
     - bloom-export-upstream :{vcs_local_uri} :{vcs_type} --tag :{release_tag} --display-uri
