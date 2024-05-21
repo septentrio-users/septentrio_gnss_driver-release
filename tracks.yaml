@@ -176,7 +176,7 @@ tracks:
       :{release_inc} --os-name fedora
     - git-bloom-generate -y rosrpm --prefix release/:{ros_distro} :{ros_distro} -i
       :{release_inc} --os-name rhel
-    devel_branch: main
+    devel_branch: master
     last_release: v1.4.0
     last_version: 1.4.0
     name: septentrio_gnss_driver
@@ -187,7 +187,7 @@ tracks:
     ros_distro: noetic
     vcs_type: git
     vcs_uri: https://github.com/septentrio-gnss/septentrio_gnss_driver.git
-    version: :{auto}
+    version: 1.4.0
   noetic_dev:
     actions:
     - bloom-export-upstream :{vcs_local_uri} :{vcs_type} --tag :{release_tag} --display-uri
