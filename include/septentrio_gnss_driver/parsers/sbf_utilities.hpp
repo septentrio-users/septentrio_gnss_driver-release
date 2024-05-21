@@ -26,25 +26,44 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-// ****************************************************************************
+// *****************************************************************************
 
-#include <septentrio_gnss_driver/node/rosaic_node.hpp>
+#pragma once
+
+#include <cstdint>
+#include <type_traits>
+
+template <class T, class = void>
+struct has_block_header : std::false_type
+{
+};
+
+template <class T>
+struct has_block_header<T, std::void_t<decltype(T::block_header)>> : std::true_type
+{
+};
 
 /**
- * @file main.cpp
- * @date 01/12/21
- * @brief Main function of the ROSaic driver:
+ * validValue
+ * @brief Check if value is not set to Do-Not-Use
  */
-
-int main(int argc, char** argv)
+template <typename T>
+[[nodiscard]] bool validValue(T s)
 {
-    rclcpp::init(argc, argv);
-
-    auto options = rclcpp::NodeOptions().use_intra_process_comms(false);
-    auto rx_node = std::make_shared<rosaic_node::ROSaicNode>(options);
-
-    rclcpp::spin(rx_node->get_node_base_interface());
-
-    rclcpp::shutdown();
-    return 0;
+    static_assert(std::is_same<uint16_t, T>::value ||
+                  std::is_same<uint32_t, T>::value ||
+                  std::is_same<float, T>::value || std::is_same<double, T>::value);
+    if (std::is_same<uint16_t, T>::value)
+    {
+        return (s != static_cast<uint16_t>(65535));
+    } else if (std::is_same<uint32_t, T>::value)
+    {
+        return (s != 4294967295u);
+    } else if (std::is_same<float, T>::value)
+    {
+        return (!std::isnan(s) && (s != -2e10f));
+    } else if (std::is_same<double, T>::value)
+    {
+        return (!std::isnan(s) && (s != -2e10));
+    }
 }
