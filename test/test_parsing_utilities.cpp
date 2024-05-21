@@ -26,25 +26,47 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-// ****************************************************************************
+// *****************************************************************************
 
-#include <septentrio_gnss_driver/node/rosaic_node.hpp>
+#include <gtest/gtest.h>
+#include <septentrio_gnss_driver/parsers/parsing_utilities.hpp>
 
-/**
- * @file main.cpp
- * @date 01/12/21
- * @brief Main function of the ROSaic driver:
- */
-
-int main(int argc, char** argv)
+TEST(WrapTest, angle180)
 {
-    rclcpp::init(argc, argv);
+    {
+        double val = 270.0;
+        auto wrapped_val = parsing_utilities::wrapAngle180to180(val);
 
-    auto options = rclcpp::NodeOptions().use_intra_process_comms(false);
-    auto rx_node = std::make_shared<rosaic_node::ROSaicNode>(options);
+        EXPECT_EQ(wrapped_val, -90.0);
+    }
+    {
+        double val = -270.0;
+        auto wrapped_val = parsing_utilities::wrapAngle180to180(val);
 
-    rclcpp::spin(rx_node->get_node_base_interface());
+        EXPECT_EQ(wrapped_val, 90.0);
+    }
+    {
+        double val = -90.0;
+        auto wrapped_val = parsing_utilities::wrapAngle180to180(val);
 
-    rclcpp::shutdown();
-    return 0;
+        EXPECT_EQ(wrapped_val, -90.0);
+    }
+    {
+        double val = 90.0;
+        auto wrapped_val = parsing_utilities::wrapAngle180to180(val);
+
+        EXPECT_EQ(wrapped_val, 90.0);
+    }
+    {
+        double val = 630.0;
+        auto wrapped_val = parsing_utilities::wrapAngle180to180(val);
+
+        EXPECT_EQ(wrapped_val, -90.0);
+    }
+    {
+        double val = -630.0;
+        auto wrapped_val = parsing_utilities::wrapAngle180to180(val);
+
+        EXPECT_EQ(wrapped_val, 90.0);
+    }
 }

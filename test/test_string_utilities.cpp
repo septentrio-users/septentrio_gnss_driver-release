@@ -26,25 +26,37 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 //
-// ****************************************************************************
+// *****************************************************************************
 
-#include <septentrio_gnss_driver/node/rosaic_node.hpp>
+#include <gtest/gtest.h>
+#include <septentrio_gnss_driver/parsers/string_utilities.hpp>
 
-/**
- * @file main.cpp
- * @date 01/12/21
- * @brief Main function of the ROSaic driver:
- */
-
-int main(int argc, char** argv)
+TEST(TrimTest, string_trimming)
 {
-    rclcpp::init(argc, argv);
+    {
+        double val = 0.333333333;
+        auto str = string_utilities::trimDecimalPlaces(val);
 
-    auto options = rclcpp::NodeOptions().use_intra_process_comms(false);
-    auto rx_node = std::make_shared<rosaic_node::ROSaicNode>(options);
+        EXPECT_EQ(str.size(), 5);
+    }
+    {
 
-    rclcpp::spin(rx_node->get_node_base_interface());
+        double val = 0.0;
+        auto str = string_utilities::trimDecimalPlaces(val);
 
-    rclcpp::shutdown();
-    return 0;
+        EXPECT_EQ(str.size(), 5);
+    }
+    {
+
+        double val = 100.333333333;
+        auto str = string_utilities::trimDecimalPlaces(val);
+
+        EXPECT_EQ(str.size(), 7);
+    }
+    {
+        double val = 100.0;
+        auto str = string_utilities::trimDecimalPlaces(val);
+
+        EXPECT_EQ(str.size(), 7);
+    }
 }

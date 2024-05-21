@@ -29,6 +29,8 @@
 // *****************************************************************************
 
 #include <chrono>
+#include <filesystem>
+#include <fstream>
 #include <linux/serial.h>
 
 // Boost includes
@@ -82,6 +84,8 @@ namespace io {
 
     void CommunicationCore::resetSettings()
     {
+        if (!manager_->connected())
+            return;
         if (settings_->configure_rx && !settings_->read_from_sbf_log &&
             !settings_->read_from_pcap)
         {
@@ -119,23 +123,23 @@ namespace io {
                              ", baud115200, bits8, No, bit1, none\x0D");
                 }
             }
-            if (!settings_->ins_vsm_ip_server_id.empty())
+            if (!settings_->ins_vsm.ip_server.empty())
             {
-                if (!settings_->ins_vsm_ip_server_keep_open)
+                if (!settings_->ins_vsm.ip_server_keep_open)
                 {
-                    send("sdio, " + settings_->ins_vsm_ip_server_id +
+                    send("sdio, " + settings_->ins_vsm.ip_server +
                          ",  auto, none\x0D");
-                    send("siss, " + settings_->ins_vsm_ip_server_id + ",  0\x0D");
+                    send("siss, " + settings_->ins_vsm.ip_server + ",  0\x0D");
                 }
             }
-            if (!settings_->ins_vsm_serial_port.empty())
+            if (!settings_->ins_vsm.serial_port.empty())
             {
-                if (!settings_->ins_vsm_serial_keep_open)
+                if (!settings_->ins_vsm.serial_keep_open)
                 {
-                    if (settings_->ins_vsm_serial_port.rfind("COM", 0) == 0)
-                        send("scs, " + settings_->ins_vsm_serial_port +
+                    if (settings_->ins_vsm.serial_port.rfind("COM", 0) == 0)
+                        send("scs, " + settings_->ins_vsm.serial_port +
                              ", baud115200, bits8, No, bit1, none\x0D");
-                    send("sdio, " + settings_->ins_vsm_serial_port +
+                    send("sdio, " + settings_->ins_vsm.serial_port +
                          ",  auto, none\x0D");
                 }
             }
@@ -171,7 +175,7 @@ namespace io {
             static_cast<uint32_t>(settings_->reconnect_delay_s * 1000));
         if (initializeIo())
         {
-            while (running_)
+            while (running_ && node_->ok())
             {
                 boost::asio::deadline_timer t(io, wait_ms);
 
@@ -184,6 +188,9 @@ namespace io {
                 t.wait();
             }
         }
+        // If node is shut down before a connection could be established
+        if (!node_->ok())
+            return;
 
         // Sends commands to the Rx regarding which SBF/NMEA messages it should
         // output
@@ -245,8 +252,8 @@ namespace io {
         default:
         {
             if (!client || settings_->configure_rx ||
-                (settings_->ins_vsm_ros_source == "odometry") ||
-                (settings_->ins_vsm_ros_source == "twist"))
+                (settings_->ins_vsm.ros_source == "odometry") ||
+                (settings_->ins_vsm.ros_source == "twist"))
             {
                 node_->log(log_level::DEBUG, "Unsupported device.");
                 return false;
@@ -285,24 +292,6 @@ namespace io {
         node_->log(log_level::INFO,
                    "The connection descriptor is " + mainConnectionPort_);
         streamPort_ = mainConnectionPort_;
-        if ((settings_->tcp_port != 0) && (!settings_->tcp_ip_server.empty()))
-        {
-            streamPort_ = settings_->tcp_ip_server;
-            send("siss, " + streamPort_ + ", " +
-                 std::to_string(settings_->tcp_port) + ", TCP, " + "\x0D");
-            tcpClient_->connect();
-        } else if ((settings_->udp_port != 0) && (!settings_->udp_ip_server.empty()))
-        {
-            streamPort_ = settings_->udp_ip_server;
-            std::string destination;
-            if (!settings_->udp_unicast_ip.empty())
-                destination = settings_->udp_unicast_ip;
-            else
-                destination = "255.255.255.255";
-            send("siss, " + streamPort_ + ", " +
-                 std::to_string(settings_->udp_port) + ", UDP, " + destination +
-                 "\x0D");
-        }
 
         node_->log(log_level::INFO, "Setting up Rx.");
 
@@ -323,6 +312,59 @@ namespace io {
                      settings_->login_password + " \x0D");
         }
 
+        if (!settings_->custom_commands_file.empty())
+        {
+            if ((std::filesystem::exists(settings_->custom_commands_file)))
+            {
+                std::ifstream filestream(settings_->custom_commands_file);
+                node_->log(log_level::INFO, "Custom command file " +
+                                                settings_->custom_commands_file +
+                                                " loaded.");
+
+                size_t ctr = 0;
+                std::string line;
+                while (std::getline(filestream, line))
+                {
+                    ++ctr;
+                    send(line + "\x0D");
+                }
+                node_->log(
+                    log_level::INFO,
+                    std::to_string(ctr) +
+                        " custom commands have been parsed and sent to the Rx.");
+            } else
+            {
+                node_->log(log_level::ERROR, "Custom command file " +
+                                                 settings_->custom_commands_file +
+                                                 " could not be found.");
+            }
+        }
+
+        if (tcpClient_)
+        {
+            streamPort_ = settings_->tcp_ip_server;
+            std::string tcp_mode;
+            if (settings_->ins_vsm.use_stream_device)
+                tcp_mode = "TCP2Way";
+            else
+                tcp_mode = "TCP";
+            send("siss, " + streamPort_ + ", " +
+                 std::to_string(settings_->tcp_port) + ", " + tcp_mode + ", " +
+                 "\x0D");
+            tcpClient_->connect();
+        } else if (udpClient_)
+        {
+            streamPort_ = settings_->udp_ip_server;
+            std::string destination;
+            if (!settings_->udp_unicast_ip.empty())
+                destination = settings_->udp_unicast_ip;
+            else
+                destination = "255.255.255.255";
+            send("siss, " + streamPort_ + ", " +
+                 std::to_string(settings_->udp_port) + ", UDP, " + destination +
+                 "\x0D");
+        }
+
         // Turning off all current SBF/NMEA output
         send("sso, all, none, none, off \x0D");
         send("sno, all, none, none, off \x0D");
@@ -332,8 +374,12 @@ namespace io {
         telegramHandler_.waitForCapabilities();
 
         // Activate NTP server
-        if (settings_->use_gnss_time)
+        if (settings_->ntp_server)
             send("sntp, on \x0D");
+
+        // Activate PTP server clock
+        if (settings_->ptp_server_clock)
+            send("sptp, on \x0D");
 
         // Setting the datum to be used by the Rx (not the NMEA output though, which
         // only provides MSL and undulation (by default with respect to WGS84), but
@@ -348,8 +394,7 @@ namespace io {
         {
             {
                 std::stringstream ss;
-                ss << "sat, Main, \"" << settings_->ant_type << "\""
-                   << "\x0D";
+                ss << "sat, Main, \"" << settings_->ant_type << "\"" << "\x0D";
                 send(ss.str());
             }
 
@@ -357,8 +402,7 @@ namespace io {
             if (settings_->multi_antenna)
             {
                 std::stringstream ss;
-                ss << "sat, Aux1, \"" << settings_->ant_type << "\""
-                   << "\x0D";
+                ss << "sat, Aux1, \"" << settings_->ant_type << "\"" << "\x0D";
                 send(ss.str());
             }
         } else if (settings_->septentrio_receiver_type == "gnss")
@@ -424,9 +468,6 @@ namespace io {
         for (auto ip_server : settings_->rtk.ip_server)
         {
             if (!ip_server.id.empty())
-            // Since the Rx does not have internet (and you will not
-            // be able to share it via USB), we need to forward the
-            // corrections ourselves, though not on the same port.
             {
                 {
                     std::stringstream ss;
@@ -530,9 +571,7 @@ namespace io {
                     settings_->theta_z >= ANGLE_MIN &&
                     settings_->theta_z <= ANGLE_MAX)
                 {
-                    ss << " sio, "
-                       << "manual"
-                       << ", "
+                    ss << " sio, " << "manual" << ", "
                        << string_utilities::trimDecimalPlaces(settings_->theta_x)
                        << ", "
                        << string_utilities::trimDecimalPlaces(settings_->theta_y)
@@ -639,15 +678,11 @@ namespace io {
                 std::stringstream ss;
                 if (settings_->ins_use_poi)
                 {
-                    ss << "sinc, on, all, "
-                       << "POI1"
-                       << " \x0D";
+                    ss << "sinc, on, all, " << "POI1" << " \x0D";
                     send(ss.str());
                 } else
                 {
-                    ss << "sinc, on, all, "
-                       << "MainAnt"
-                       << " \x0D";
+                    ss << "sinc, on, all, " << "MainAnt" << " \x0D";
                     send(ss.str());
                 }
             }
@@ -729,7 +764,7 @@ namespace io {
             }
             if (settings_->publish_diagnostics)
             {
-                blocks << " +ReceiverStatus +QualityInd";
+                blocks << " +QualityInd";
             }
             if (settings_->publish_aimplusstatus)
             {
@@ -742,7 +777,7 @@ namespace io {
                 blocks << " +GALAuthStatus";
             }
 
-            blocks << " +ReceiverSetup";
+            blocks << " +ReceiverSetup +ReceiverStatus";
 
             std::stringstream ss;
             ss << "sso, Stream" << std::to_string(stream) << ", " << streamPort_
@@ -907,30 +942,49 @@ namespace io {
 
         if (settings_->septentrio_receiver_type == "ins")
         {
-            if (!settings_->ins_vsm_ip_server_id.empty())
+            if (!settings_->ins_vsm.ip_server.empty())
             {
-                send("siss, " + settings_->ins_vsm_ip_server_id + ", " +
-                     std::to_string(settings_->ins_vsm_ip_server_port) +
+                send("siss, " + settings_->ins_vsm.ip_server + ", " +
+                     std::to_string(settings_->ins_vsm.ip_server_port) +
                      ", TCP2Way \x0D");
-                send("sdio, IPS2, NMEA, none\x0D");
+                send("sdio, " + settings_->ins_vsm.ip_server + ", NMEA, none\x0D");
             }
-            if (!settings_->ins_vsm_serial_port.empty())
+            if (!settings_->ins_vsm.serial_port.empty())
             {
-                if (settings_->ins_vsm_serial_port.rfind("COM", 0) == 0)
-                    send("scs, " + settings_->ins_vsm_serial_port + ", baud" +
-                         std::to_string(settings_->ins_vsm_serial_baud_rate) +
+                if (settings_->ins_vsm.serial_port.rfind("COM", 0) == 0)
+                    send("scs, " + settings_->ins_vsm.serial_port + ", baud" +
+                         std::to_string(settings_->ins_vsm.serial_baud_rate) +
                          ", bits8, No, bit1, none\x0D");
-                send("sdio, " + settings_->ins_vsm_serial_port + ", NMEA\x0D");
+                send("sdio, " + settings_->ins_vsm.serial_port + ", NMEA\x0D");
             }
-            if ((settings_->ins_vsm_ros_source == "odometry") ||
-                (settings_->ins_vsm_ros_source == "twist"))
+
+            if ((settings_->ins_vsm.ros_source == "odometry") ||
+                (settings_->ins_vsm.ros_source == "twist"))
             {
-                std::string s;
-                s = "sdio, " + mainConnectionPort_ + ", NMEA, +NMEA +SBF\x0D";
-                send(s);
+                if (settings_->ins_vsm.use_stream_device)
+                {
+                    send("sdio, " + settings_->tcp_ip_server +
+                         ", NMEA, +NMEA +SBF\x0D");
+                } else if (!settings_->ins_vsm.ip_server.empty())
+                {
+                    send("siss, " + settings_->ins_vsm.ip_server + ", " +
+                         std::to_string(settings_->ins_vsm.ip_server_port) +
+                         ", TCP2Way \x0D");
+
+                    send("sdio, " + settings_->ins_vsm.ip_server +
+                         ", NMEA, none\x0D");
+
+                    tcpVsm_.reset(new AsyncManager<TcpIo>(node_, &telegramQueue_));
+                    tcpVsm_->setPort(
+                        std::to_string(settings_->ins_vsm.ip_server_port));
+                    tcpVsm_->connect();
+                }
+
                 nmeaActivated_ = true;
             }
         }
+        // Save config to boot
+        send("eccf, Current, Boot\x0D");
 
         node_->log(log_level::DEBUG, "Leaving configureRx() method");
     }
@@ -938,7 +992,17 @@ namespace io {
     void CommunicationCore::sendVelocity(const std::string& velNmea)
     {
         if (nmeaActivated_)
-            manager_.get()->send(velNmea);
+        {
+            if (settings_->ins_vsm.use_stream_device)
+            {
+                if (tcpClient_)
+                    tcpClient_.get()->send(velNmea);
+            } else
+            {
+                if (tcpVsm_)
+                    tcpVsm_.get()->send(velNmea);
+            }
+        }
     }
 
     std::string CommunicationCore::resetMainConnection()
