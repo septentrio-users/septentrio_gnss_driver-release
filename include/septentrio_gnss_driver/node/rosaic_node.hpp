@@ -64,10 +64,8 @@
  * @brief The heart of the ROSaic driver: The ROS node that represents it
  */
 
-// ROS includes
-#include <ros/console.h>
-#include <ros/ros.h>
 // tf2 includes
+#include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 // ROSaic includes
 #include <septentrio_gnss_driver/communication/communication_core.hpp>
@@ -82,13 +80,13 @@ namespace rosaic_node {
      * @class ROSaicNode
      * @brief This class represents the ROsaic node, to be extended..
      */
-    class ROSaicNode : ROSaicNodeBase
+    class ROSaicNode : public ROSaicNodeBase
     {
     public:
         //! The constructor initializes and runs the ROSaic node, if everything works
         //! fine. It loads the user-defined ROS parameters, subscribes to Rx
         //! messages, and publishes requested ROS messages...
-        ROSaicNode();
+        ROSaicNode(const rclcpp::NodeOptions& options);
 
     private:
         /**
