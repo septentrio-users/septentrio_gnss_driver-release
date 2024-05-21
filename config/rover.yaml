@@ -6,7 +6,7 @@ device: tcp://192.168.3.1:28784
 
 serial:
   baudrate: 921600
-  hw_flow_control: off
+  hw_flow_control: "off"
 
 stream_device:
   tcp:
@@ -19,12 +19,14 @@ stream_device:
 
 configure_rx: true
 
+custom_commands_file: ""
+
 login:
   user: ""
-  password: ""
+  password: ""  
 
 osnma:
-  mode: "loose"
+  mode: "off"
   ntp_server: ""
   keep_open: true
 
@@ -52,7 +54,7 @@ use_ros_axis_orientation: true
 
 receiver_type: gnss
 
-multi_antenna: false
+multi_antenna: true
 
 datum: Default
 
@@ -64,22 +66,23 @@ poi_to_arp:
 att_offset:
   heading: 0.0
   pitch: 0.0
-  
+
 ant_type: "Unknown"
 ant_serial_nr: "Unknown"
 ant_aux1_type: "Unknown"
 ant_aux1_serial_nr: "Unknown"
 
-leap_seconds: 18
-
 polling_period:
-  pvt: 500
+  pvt: 100
   rest: 500
 
+# time
 use_gnss_time: false
+ntp_server: true
+ptp_server_clock: false
+latency_compensation: true
 
-latency_compensation: false
-
+# RTK
 rtk_settings:
   ntrip_1:
     id: ""
@@ -108,7 +111,9 @@ rtk_settings:
     keep_open: true
 
 publish:
-  # For both GNSS and INS Rxs
+  # For both GNSS and INS Rxs  
+  auto_publish: false
+  publish_only_valid: false
   navsatfix: false
   gpsfix: true
   gpgga: false
@@ -146,6 +151,7 @@ publish:
   tf: false
   localization_ecef: false
   tf_ecef: false
+
 
 # INS-Specific Parameters
 
@@ -189,7 +195,8 @@ ins_vsm:
     port: ""
     baud_rate: 115200
     keep_open: true
-  
-# Logger
+
+
+# logger
 
 activate_debug_log: false

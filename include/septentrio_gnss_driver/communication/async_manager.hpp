@@ -60,7 +60,7 @@
 
 // Boost includes
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/regex.hpp>
 
 // ROSaic includes
@@ -95,6 +95,7 @@ namespace io {
         [[nodiscard]] virtual bool connect() = 0;
         //! Sends commands to the receiver
         virtual void send(const std::string& cmd) = 0;
+        bool connected() { return false; };
     };
 
     /**
@@ -123,9 +124,10 @@ namespace io {
 
         void send(const std::string& cmd);
 
+        bool connected();
+
     private:
         void receive();
-        void close();
         void runIoService();
         void runWatchdog();
         void write(const std::string& cmd);
@@ -146,6 +148,8 @@ namespace io {
         std::thread ioThread_;
         std::thread watchdogThread_;
 
+        bool connected_ = false;
+
         std::array<uint8_t, 1> buf_;
         //! Timestamp of receiving buffer
         Timestamp recvStamp_;
@@ -158,9 +162,8 @@ namespace io {
     template <typename IoType>
     AsyncManager<IoType>::AsyncManager(ROSaicNodeBase* node,
                                        TelegramQueue* telegramQueue) :
-        node_(node),
-        ioService_(new boost::asio::io_service), ioInterface_(node, ioService_),
-        telegramQueue_(telegramQueue)
+        node_(node), ioService_(new boost::asio::io_service),
+        ioInterface_(node, ioService_), telegramQueue_(telegramQueue)
     {
         node_->log(log_level::DEBUG, "AsyncManager created.");
     }
@@ -169,11 +172,15 @@ namespace io {
     AsyncManager<IoType>::~AsyncManager()
     {
         running_ = false;
-        close();
+        ioInterface_.close();
         node_->log(log_level::DEBUG, "AsyncManager shutting down threads");
-        ioService_->stop();
-        ioThread_.join();
-        watchdogThread_.join();
+        if (ioThread_.joinable())
+        {
+            ioService_->stop();
+            ioThread_.join();
+        }
+        if (watchdogThread_.joinable())
+            watchdogThread_.join();
         node_->log(log_level::DEBUG, "AsyncManager threads stopped");
     }
 
@@ -186,6 +193,7 @@ namespace io {
         {
             return false;
         }
+        connected_ = true;
         receive();
 
         return true;
@@ -211,6 +219,12 @@ namespace io {
     }
 
     template <typename IoType>
+    bool AsyncManager<IoType>::connected()
+    {
+        return connected_;
+    }
+
+    template <typename IoType>
     void AsyncManager<IoType>::receive()
     {
         resync();
@@ -219,12 +233,6 @@ namespace io {
         if (!watchdogThread_.joinable())
             watchdogThread_ =
                 std::thread(std::bind(&AsyncManager::runWatchdog, this));
-    }
-
-    template <typename IoType>
-    void AsyncManager<IoType>::close()
-    {
-        ioService_->post([this]() { ioInterface_.close(); });
     }
 
     template <typename IoType>
@@ -251,12 +259,14 @@ namespace io {
                     break;
                 } else
                 {
+                    connected_ = false;
                     node_->log(log_level::ERROR,
                                "AsyncManager connection lost. Trying to reconnect.");
                     ioService_->reset();
                     ioThread_.join();
                     while (!ioInterface_.connect())
                         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    connected_ = true;
                     receive();
                 }
             } else if (running_ && std::is_same<TcpIo, IoType>::value)
@@ -456,6 +466,7 @@ namespace io {
                 {
                     node_->log(log_level::DEBUG,
                                "AsyncManager sync read error: " + ec.message());
+                    resync();
                 }
             });
     }
@@ -497,6 +508,7 @@ namespace io {
                     node_->log(log_level::DEBUG,
                                "AsyncManager SBF header read error: " +
                                    ec.message());
+                    resync();
                 }
             });
     }
@@ -536,6 +548,7 @@ namespace io {
                 {
                     node_->log(log_level::DEBUG,
                                "AsyncManager SBF read error: " + ec.message());
+                    resync();
                 }
             });
     }
@@ -624,6 +637,7 @@ namespace io {
                 {
                     node_->log(log_level::DEBUG,
                                "AsyncManager string read error: " + ec.message());
+                    resync();
                 }
             });
     }
