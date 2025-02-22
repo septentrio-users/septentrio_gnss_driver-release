@@ -1,3 +1,26 @@
+## septentrio_gnss_driver (noetic) - 1.4.2-1
+
+The packages in the `septentrio_gnss_driver` repository were released into the `noetic` distro by running `/usr/local/bin/bloom-release --rosdistro noetic --track noetic septentrio_gnss_driver --edit` on `Sat, 22 Feb 2025 19:41:55 -0000`
+
+The `septentrio_gnss_driver` package was released.
+
+Version of package(s) in repository `septentrio_gnss_driver`:
+
+- upstream repository: https://github.com/septentrio-gnss/septentrio_gnss_driver.git
+- release repository: https://github.com/septentrio-users/septentrio_gnss_driver-release.git
+- rosdistro version: `1.4.1-1`
+- old version: `1.4.1-1`
+- new version: `1.4.2-1`
+
+Versions of tools used:
+
+- bloom version: `0.11.2`
+- catkin_pkg version: `0.4.24`
+- rosdep version: `0.21.0`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## septentrio_gnss_driver (noetic) - 1.4.1-1
 
 The packages in the `septentrio_gnss_driver` repository were released into the `noetic` distro by running `/usr/local/bin/bloom-release --rosdistro noetic --track noetic septentrio_gnss_driver --edit` on `Sun, 04 Aug 2024 21:19:39 -0000`
