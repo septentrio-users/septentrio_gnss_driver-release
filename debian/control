@@ -1,0 +1,12 @@
+Source: ros-noetic-septentrio-gnss-driver
+Section: misc
+Priority: optional
+Maintainer: Tibor Dome <tibor.doeme@alumni.ethz.ch>
+Build-Depends: debhelper (>= 9.0.0), libboost-all-dev, libgeographic-dev, libpcap0.8-dev, ros-noetic-catkin, ros-noetic-diagnostic-msgs, ros-noetic-geometry-msgs, ros-noetic-gps-common, ros-noetic-message-generation, ros-noetic-nav-msgs, ros-noetic-nmea-msgs, ros-noetic-roscpp, ros-noetic-sensor-msgs, ros-noetic-tf2, ros-noetic-tf2-eigen, ros-noetic-tf2-geometry-msgs, ros-noetic-tf2-ros
+Homepage: https://github.com/septentrio-gnss/septentrio_gnss_driver
+Standards-Version: 3.9.2
+
+Package: ros-noetic-septentrio-gnss-driver
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libboost-all-dev, libgeographic-dev, libpcap0.8-dev, ros-noetic-diagnostic-msgs, ros-noetic-geometry-msgs, ros-noetic-gps-common, ros-noetic-message-runtime, ros-noetic-nav-msgs, ros-noetic-nmea-msgs, ros-noetic-roscpp, ros-noetic-sensor-msgs, ros-noetic-tf2, ros-noetic-tf2-eigen, ros-noetic-tf2-geometry-msgs, ros-noetic-tf2-ros
+Description: ROSaic: C++ driver for Septentrio's GNSS and INS receivers
